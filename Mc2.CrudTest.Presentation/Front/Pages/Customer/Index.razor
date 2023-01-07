@@ -1,0 +1,126 @@
+﻿<style>
+    .input-group-append > button {
+        padding: unset;
+        font-size: 24px;
+        padding-bottom: 0%;
+        padding-top: 10%;
+        padding-right: 15%;
+        padding-left: 15%;
+    }
+
+</style>
+
+@page "/Customer"
+@page "/Customer/Index"
+@using Mc2.CrudTest.Domain.ViewModels
+@inject HttpClient Http
+<h1>Customers</h1>
+@if (backendAnswer.Data == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-6">
+            <a href='/Customer/Create' class="btn btn-primary" role="button">
+                <i class="oi oi-plus"></i>
+                Add Customer
+            </a>
+        </div>
+        <div class="input-group col">
+            <input type="text" class="form-control" placeholder="Search customer by firstname or lastname"
+               @bind="SearchString" @bind:event="oninput" @onkeyup="Filter" />
+            @if (SearchString.Length > 0)
+            {
+                <div class="input-group-append">
+                    <button class="btn btn-danger" @onclick="ResetSearch">
+                        <i class="oi oi-circle-x"></i>
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+    <br />
+    <table class="table table-striped align-middle table-bordered">
+        <thead class="table-success">
+            <tr>
+                <th>#</th>
+                <th>Firstname</th>
+                <th>Lastname</th>
+                <th>Phone Number</th>
+                <th>Birth</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var customer in customerList)
+            {
+                index++;
+                <tr>
+                    <td>@index</td>
+                    <td>@customer.FirstName</td>
+                    <td>@customer.LastName</td>
+                    <td>@customer.PhoneNumber</td>
+                    <td>@customer.DateOfBirth.ToString()</td>
+                    <td>
+                        <a href='/Customer/Edit/@customer.Id' class="btn btn-outline-dark" role="button">
+                            Edit
+                        </a>
+                        <a href='/Customer/Delete/@customer.Id' class="btn btn-outline-danger" role="button">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+}
+@code {
+    protected int index = 0;
+    protected ResultWithDataViewModel<List<CustomerViewModel>> backendAnswer = new();
+    protected List<CustomerViewModel> customerList = new();
+    protected List<CustomerViewModel> searchcustomerData = new();
+    protected CustomerViewModel customer = new();
+    protected string SearchString { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetList();
+    }
+
+    protected async Task GetList()
+    {
+        backendAnswer = await Http.GetFromJsonAsync<ResultWithDataViewModel<List<CustomerViewModel>>>("api/Customer");
+
+        searchcustomerData = backendAnswer.Data;
+        customerList = backendAnswer.Data;
+    }
+
+    protected void Filter()
+    {
+        if (!string.IsNullOrEmpty(SearchString))
+        {
+            customerList = searchcustomerData
+                .Where(x => x.FirstName.IndexOf(SearchString, StringComparison.OrdinalIgnoreCase) != -1 ||
+                x.LastName.IndexOf(SearchString, StringComparison.OrdinalIgnoreCase) != -1)
+                .ToList();
+        }
+        else
+        {
+            customerList = searchcustomerData;
+        }
+    }
+
+    protected void DeleteConfirm(Guid customerID)
+    {
+        customer = customerList.FirstOrDefault(x => x.Id == customerID);
+    }
+
+    public void ResetSearch()
+    {
+        SearchString = string.Empty;
+        customerList = searchcustomerData;
+    }
+}

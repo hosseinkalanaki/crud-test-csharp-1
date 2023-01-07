@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Mc2.CrudTest.Presentation.Server.Data;
 
 namespace Mc2.CrudTest.Presentation.Server
 {
@@ -22,6 +24,9 @@ namespace Mc2.CrudTest.Presentation.Server
 
             services.AddControllersWithViews();
             services.AddRazorPages();
+
+            services.AddDbContext<DatabaseContext>(item => item.UseSqlServer(Configuration.GetConnectionString("ConnectionString")));
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
